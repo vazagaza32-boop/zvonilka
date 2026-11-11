@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <meta name="color-scheme" content="dark" />
+  <title>Звонилка</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎧</text></svg>" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="app" class="app">
+
+    <!-- ===== ЛЕВОЕ МЕНЮ (серверы) ===== -->
+    <aside class="servers">
+      <a class="server server--active" data-room="general" title="Общий чат" href="#" id="serverGeneral">
+        <span class="server__icon">🎧</span>
+        <span class="server__tooltip">Звонилка</span>
+      </a>
+      <div class="server__sep"></div>
+      <a class="server server--add" href="#" id="addServer" title="Создать комнату">
+        <span class="server__icon">+</span>
+        <span class="server__tooltip">Создать комнату</span>
+      </a>
+    </aside>
+
+    <!-- ===== СПИСОК КАНАЛОВ / УЧАСТНИКОВ ===== -->
+    <aside class="channels">
+      <div class="channels__header">
+        <span class="channels__title" id="roomTitle">Звонилка</span>
+      </div>
+
+      <div class="channel-group">
+        <div class="channel-group__label" id="channelGroupLabel">ТЕКСТОВЫЕ КАНАЛЫ</div>
+        <a class="channel channel--active" href="#" data-channel="general" id="channelText">
+          <span class="channel__hash">#</span> общий
+        </a>
+        <div class="channel-group__label channel-group__label--voice" id="voiceGroupLabel">ГОЛОСОВЫЕ КАНАЛЫ</div>
+        <a class="channel" href="#" data-channel="voice" id="channelVoice">
+          <span class="channel__voice">🔊</span> звонилка
+        </a>
+      </div>
+
+      <!-- Я в сети -->
+      <div class="me">
+        <div class="me__avatar" id="meAvatar">😎</div>
+        <div class="me__info">
+          <div class="me__name" id="meName">...</div>
+          <div class="me__status" id="meStatus">—</div>
+        </div>
+        <button class="me__settings" id="btnSettings" title="Настройки">⚙</button>
+      </div>
+    </aside>
+
+    <!-- ===== ОСНОВНАЯ ОБЛАСТЬ ===== -->
+    <main class="main">
+      <!-- Шапка канала -->
+      <header class="topbar">
+        <div class="topbar__left">
+          <h1 class="topbar__title" id="topbarTitle"># общий</h1>
+          <span class="topbar__topic" id="topbarTopic">Общаемся спокойно, без пинга 🤙</span>
+        </div>
+        <div class="topbar__right">
+          <span class="latency" id="latency" title="Задержка">— мс</span>
+          <div class="online-chips" id="onlineChips"></div>
+        </div>
+      </header>
+
+      <!-- Чат -->
+      <section class="chat" id="chatView">
+        <div class="messages" id="messages"></div>
+        <div class="typing" id="typingBar"></div>
+        <form class="composer" id="composer">
+          <div class="composer__avatar" id="composerAvatar">😎</div>
+          <input class="composer__input" id="chatInput" type="text" placeholder="Напиши что-нибудь…" autocomplete="off" maxlength="1000" />
+          <button class="composer__send" id="chatSend" type="submit" title="Отправить">➤</button>
+        </form>
+      </section>
+
+      <!-- Голосовой канал -->
+      <section class="voice" id="voiceView" hidden>
+        <div class="voice__stage">
+          <h2 class="voice__hint" id="voiceHint">Войди в голосовой канал</h2>
+          <div class="voice__peers" id="voicePeers"></div>
+        </div>
+        <div class="voice__controls">
+          <button class="vbtn vbtn--join" id="btnJoinVoice">🔊 Войти в звонок</button>
+          <button class="vbtn vbtn--mute" id="btnMute" title="Микрофон">🎙</button>
+          <button class="vbtn vbtn--deaf" id="btnDeaf" title="Звук">🔈</button>
+        </div>
+      </section>
+    </main>
+
+    <!-- ===== ПАНЕЛЬ УЧАСТНИКОВ (справа) ===== -->
+    <aside class="members" id="membersPanel">
+      <div class="members__title">В сети — <span id="membersCount">0</span></div>
+      <div class="members__list" id="membersList"></div>
+    </aside>
+
+  </div>
+
+  <!-- ===== ОВЕРЛЕЙ: ВХОД ===== -->
+  <div class="overlay" id="loginOverlay">
+    <div class="modal modal--login">
+      <div class="modal__logo">🎧</div>
+      <h2 class="modal__h2">Звонилка</h2>
+      <p class="modal__sub">Общение без хуйни и без пинга</p>
+      <label class="field">
+        <span class="field__label">Твой ник</span>
+        <input class="field__input" id="loginName" type="text" placeholder="Как тебя звать?" maxlength="24" autocomplete="nickname" />
+      </label>
+      <label class="field">
+        <span class="field__label">Комната (код)</span>
+        <input class="field__input" id="loginRoom" type="text" placeholder="general / любой код" maxlength="40" />
+        <span class="field__hint">Одинаковый код у тебя и у кента = одна комната</span>
+      </label>
+      <button class="btn btn--primary btn--block" id="loginGo">Войти</button>
+    </div>
+  </div>
+
+  <!-- ===== ОВЕРЛЕЙ: НАСТРОЙКИ ===== -->
+  <div class="overlay" id="settingsOverlay" hidden>
+    <div class="modal modal--settings">
+      <div class="modal__head">
+        <h2 class="modal__h2">Настройки профиля</h2>
+        <button class="modal__close" id="settingsClose">✕</button>
+      </div>
+
+      <div class="avatar-picker">
+        <span class="avatar-picker__label">Аватар</span>
+        <div class="avatar-picker__grid" id="avatarGrid"></div>
+      </div>
+
+      <div class="color-picker">
+        <span class="color-picker__label">Цвет ника</span>
+        <div class="color-picker__grid" id="colorGrid"></div>
+      </div>
+
+      <label class="field">
+        <span class="field__label">Ник</span>
+        <input class="field__input" id="setName" type="text" maxlength="24" />
+      </label>
+
+      <label class="field">
+        <span class="field__label">Статус</span>
+        <input class="field__input" id="setStatus" type="text" placeholder="Например: на связи" maxlength="80" />
+      </label>
+
+      <button class="btn btn--primary btn--block" id="saveSettings">Сохранить</button>
+
+      <div class="modal__token" id="tokenRow">
+        <span class="field__label">Твоя ссылка-приглашение</span>
+        <div class="token__box">
+          <code id="inviteLink"></code>
+          <button class="btn btn--ghost" id="copyInvite">Копировать</button>
+        </div>
+        <span class="field__hint">Скинь кенту — он попадёт в ту же комнату и увидит твой профиль.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== ОВЕРЛЕЙ: ВХОДЯЩИЙ ЗВОНОК ===== -->
+  <div class="overlay overlay--call" id="incomingOverlay" hidden>
+    <div class="call-modal">
+      <div class="call-modal__avatar" id="incomingAvatar">😎</div>
+      <div class="call-modal__name" id="incomingName">Кто-то</div>
+      <div class="call-modal__pulse" id="incomingPulse"></div>
+      <div class="call-modal__actions">
+        <button class="call-btn call-btn--decline" id="btnDecline" title="Отклонить">✕</button>
+        <button class="call-btn call-btn--accept" id="btnAccept" title="Принять">📞</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== ОВЕРЛЕЙ: ИДЁТ ЗВОНОК ===== -->
+  <div class="call-active" id="callActive" hidden>
+    <div class="call-active__inner">
+      <div class="call-active__avatar" id="activeAvatar">😎</div>
+      <div class="call-active__name" id="activeName">...</div>
+      <div class="call-active__timer" id="activeTimer">00:00</div>
+      <div class="call-active__meter" id="activeMeter"></div>
+      <button class="call-btn call-btn--end" id="btnEndCall" title="Завершить">☎</button>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
