@@ -1,0 +1,12 @@
+# Render Blueprint — деплой в один клик из GitHub
+services:
+  - type: web
+    name: zvonilka
+    runtime: docker
+    repo: https://github.com/ВАШ-ЛОГИН/ВАШ-РЕПО.git
+    plan: free
+    healthCheckPath: /
+    envVars:
+      - key: HOST
+        value: 0.0.0.0
+      # PORT Render задаёт сам автоматически

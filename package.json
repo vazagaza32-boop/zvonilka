@@ -1,0 +1,15 @@
+{
+  "name": "zvonilka",
+  "version": "1.0.0",
+  "description": "Лёгкий сервер общения в реальном времени: чат + голос (WebRTC) + профили. Без внешних зависимостей.",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "engines": {
+    "node": ">=16"
+  },
+  "license": "MIT"
+}
